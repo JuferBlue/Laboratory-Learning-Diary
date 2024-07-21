@@ -46,8 +46,9 @@ class myNet(nn.Module):
         return x
 
 
-model = torch.load("./myNet_9.pth")
-model.to(device)
+# 使用GPU训练的模型验证的时候也要使用GPU
+model = torch.load("./myNet_9.pth", map_location=device)
+# model.to(device)
 print(model)
 img = torch.reshape(img, (1, 3, 32, 32))
 img = img.to(device)
