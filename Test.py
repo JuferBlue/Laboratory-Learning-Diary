@@ -6,10 +6,14 @@
 """
 
 
-import os
+import time
 
-dir_path = os.path.join(".", "模型保存", "1-LeNet")
-if not os.path.exists(dir_path):
-    os.makedirs(dir_path)
+start_time = time.time()
+for i in range(1000000):
+    print(i)
+
+end_time = time.time()
+elapsed_time = end_time - start_time
+print(elapsed_time)
 
 
