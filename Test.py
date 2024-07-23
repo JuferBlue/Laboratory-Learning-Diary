@@ -14,6 +14,6 @@ for i in range(1000000):
 
 end_time = time.time()
 elapsed_time = end_time - start_time
-print(elapsed_time)
+print("{:.4f}".format(elapsed_time)+"秒")
 
 

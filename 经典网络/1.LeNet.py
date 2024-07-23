@@ -4,6 +4,7 @@ from torch import nn
 from torch.utils.data import DataLoader
 from torchvision.transforms import ToTensor
 import os
+import time
 
 # 利用GPU训练
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -26,8 +27,8 @@ print(f"训练数据集长度为{train_data_size}")
 print(f"测试数据集长度为{test_data_size}")
 
 # 创建数据加载器
-train_dataloader = DataLoader(train_data, batch_size=64)
-test_dataloader = DataLoader(test_data, batch_size=64)
+train_dataloader = DataLoader(train_data, batch_size=128)
+test_dataloader = DataLoader(test_data, batch_size=128)
 
 
 # 创建网络模型
@@ -75,12 +76,16 @@ optimizer = torch.optim.SGD(lenet.parameters(), lr=learning_rate)
 total_train_step = 0
 # 记录测试的次数
 total_test_step = 0
+# 记录训练时间
+total_train_time = 0
 
 # 设置训练网络的循环次数
 epoch = 100
 
 for i in range(epoch):
     print(f"--------第{i + 1}轮训练开始--------")
+    # 开始计时
+    start_time = time.time()
     # 训练步骤开始
     lenet.train()
     for data in train_dataloader:
@@ -115,6 +120,13 @@ for i in range(epoch):
             total_test_loss+=loss.item()
             accuracy = (outputs.argmax(1) == targets).sum().item()
             total_accuracy += accuracy
+
+    # 结束计时
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    total_train_time += elapsed_time
+    print(f"本轮训练时间:{elapsed_time:.4f}s")
+    print(f"累积训练时间:{total_train_time:.4f}s")
 
     # 输出一个轮次的信息
     print(f"整体测试集上的loss:{total_test_loss}")
