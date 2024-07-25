@@ -54,6 +54,7 @@ class AlexNet(nn.Module):
             nn.Linear(4096, 4096),
             nn.ReLU(),
             nn.Dropout(0.5),
+            nn.Linear(4096, 10)
         )
     def forward(self, x):
         return self.model(x)

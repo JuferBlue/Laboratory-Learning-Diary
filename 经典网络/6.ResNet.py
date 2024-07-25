@@ -57,10 +57,10 @@ class Residual(nn.Module):
 
 # 定义残差网络
 # 开始部分和googlenet一样
-b1 = nn.Sequential(nn.Conv2d(3,64,kernel_size=7,stride=2,padding=3),
-                   nn.BatchNorm2d(64),
-                   nn.ReLU(),
-                   nn.MaxPool2d(kernel_size=3,stride=2,padding=1))
+# b1 = nn.Sequential(nn.Conv2d(3,64,kernel_size=7,stride=2,padding=3),
+#                    nn.BatchNorm2d(64),
+#                    nn.ReLU(),
+#                    nn.MaxPool2d(kernel_size=3,stride=2,padding=1))
 
 def resnet_block(input_channels, num_channels, num_residuals, first_block=False):
     blk = []
@@ -71,14 +71,34 @@ def resnet_block(input_channels, num_channels, num_residuals, first_block=False)
             blk.append(Residual(num_channels, num_channels))
     return blk
 
-b2 = nn.Sequential(*resnet_block(64, 64, 2, first_block=True))
-b3 = nn.Sequential(*resnet_block(64, 128, 2))
-b4 = nn.Sequential(*resnet_block(128, 256, 2))
-b5 = nn.Sequential(*resnet_block(256, 512, 2))
-resnet = nn.Sequential(b1, b2, b3, b4, b5,
-                    nn.AdaptiveAvgPool2d((1,1)),
-                    nn.Flatten(),
-                    nn.Linear(512, 10))
+class ResNet18(nn.Module):
+    def __init__(self):
+        super(ResNet18, self).__init__()
+        self.model = nn.Sequential(
+            nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3),
+            nn.BatchNorm2d(64),
+            nn.ReLU(),
+            nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+            *resnet_block(64, 64, 2, first_block=True),
+            *resnet_block(64, 128, 2),
+            *resnet_block(128, 256, 2),
+            *resnet_block(256, 512, 2),
+            nn.AdaptiveAvgPool2d((1,1)),
+            nn.Flatten(),
+            nn.Linear(512, 10)
+        )
+    def forward(self, x):
+        return self.model(x)
+
+# b2 = nn.Sequential(*resnet_block(64, 64, 2, first_block=True))
+# b3 = nn.Sequential(*resnet_block(64, 128, 2))
+# b4 = nn.Sequential(*resnet_block(128, 256, 2))
+# b5 = nn.Sequential(*resnet_block(256, 512, 2))
+# resnet = nn.Sequential(b1, b2, b3, b4, b5,
+#                     nn.AdaptiveAvgPool2d((1,1)),
+#                     nn.Flatten(),
+#                     nn.Linear(512, 10))
+resnet = ResNet18()
 resnet.to(device)
 
 
