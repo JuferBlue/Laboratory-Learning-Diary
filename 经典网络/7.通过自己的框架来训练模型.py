@@ -15,31 +15,61 @@ transform = torchvision.transforms.Compose([
     torchvision.transforms.Resize((224,224))
 ])
 # 自定义模型
-class AlexNet(nn.Module):
-    def __init__(self):
+# 定义一个残差块
+class Residual(nn.Module):
+    def __init__(self, input_channels, num_channels, use_1x1conv=False, strides=1):
         super().__init__()
+        self.conv1 = nn.Conv2d(input_channels, num_channels, kernel_size=3, padding=1, stride=strides)
+        self.conv2 = nn.Conv2d(num_channels, num_channels, kernel_size=3, padding=1)
+        if use_1x1conv:
+            self.conv3 = nn.Conv2d(input_channels, num_channels, kernel_size=1, stride=strides)
+        else:
+            self.conv3 = None
+        self.bn1 = nn.BatchNorm2d(num_channels)
+        self.bn2 = nn.BatchNorm2d(num_channels)
+        self.relu = nn.ReLU(inplace=True)
+    def forward(self, X):
+        Y = F.relu(self.bn1(self.conv1(X)))
+        Y = self.bn2(self.conv2(Y))
+        if self.conv3:
+            X = self.conv3(X)
+        Y+=X
+        return F.relu(Y)
+
+
+
+
+# 定义残差网络
+# 开始部分和googlenet一样
+# b1 = nn.Sequential(nn.Conv2d(3,64,kernel_size=7,stride=2,padding=3),
+#                    nn.BatchNorm2d(64),
+#                    nn.ReLU(),
+#                    nn.MaxPool2d(kernel_size=3,stride=2,padding=1))
+
+def resnet_block(input_channels, num_channels, num_residuals, first_block=False):
+    blk = []
+    for i in range(num_residuals):
+        if i == 0 and not first_block:
+            blk.append(Residual(input_channels, num_channels, use_1x1conv=True, strides=2))
+        else:
+            blk.append(Residual(num_channels, num_channels))
+    return blk
+
+class ResNet18(nn.Module):
+    def __init__(self):
+        super(ResNet18, self).__init__()
         self.model = nn.Sequential(
-            nn.Conv2d(3, 96, kernel_size=11, stride=4,padding=1),
+            nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3),
+            nn.BatchNorm2d(64),
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=3,stride=2),
-            nn.Conv2d(96, 256, kernel_size=5, padding=2),
-            nn.ReLU(),
-            nn.MaxPool2d(kernel_size=3, stride=2),
-            nn.Conv2d(256, 384, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.Conv2d(384, 384, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.Conv2d(384, 256, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.MaxPool2d(kernel_size=3, stride=2),
+            nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
+            *resnet_block(64, 64, 2, first_block=True),
+            *resnet_block(64, 128, 2),
+            *resnet_block(128, 256, 2),
+            *resnet_block(256, 512, 2),
+            nn.AdaptiveAvgPool2d((1,1)),
             nn.Flatten(),
-            nn.Linear(6400, 4096),
-            nn.ReLU(),
-            nn.Dropout(0.5),
-            nn.Linear(4096, 4096),
-            nn.ReLU(),
-            nn.Dropout(0.5),
-            nn.Linear(4096, 10)
+            nn.Linear(512, 10)
         )
     def forward(self, x):
         return self.model(x)
@@ -52,16 +82,16 @@ dataset_name = "CIFAR10"
 batch_size = 64
 # 学习率的大小
 # eg:learning_rate = 0.01
-learning_rate = 0.01
+learning_rate = 0.05
 # 训练的轮数
 # eg:epoch = 10
 epoch = 30
 # 模型名称
 # eg:model_name = "myNet"
-model_name = "myAlexNet"
+model_name = "myResNet18"
 # 模型
 # eg:net_model = LeNet
-net_model = AlexNet
+net_model = ResNet18
 
 
 def train_my_model(dataset_name,transform,batch_size,net_model,learning_rate,epoch,model_name):
