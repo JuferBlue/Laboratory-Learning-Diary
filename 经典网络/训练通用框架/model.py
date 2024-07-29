@@ -42,12 +42,9 @@ epoch = 10
 model_name = "myNet"
 
 
-
-
-
-
-
-
+def init_weights(m):
+    if type(m) == nn.Linear or type(m) == nn.Conv2d:
+        torch.nn.init.xavier_uniform_(m.weight)
 def train_my_model(dataset_name,transform,batch_size,net_model,learning_rate,epoch,model_name):
     # 指定训练设备
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -73,9 +70,7 @@ def train_my_model(dataset_name,transform,batch_size,net_model,learning_rate,epo
     net.to(device)
 
     # 初始化模型参数
-    def init_weights(m):
-        if type(m) == nn.Linear or type(m) == nn.Conv2d:
-            torch.nn.init.xavier_uniform_(m.weight)
+
     net.apply(init_weights)
 
     # 损失函数
@@ -213,44 +208,6 @@ def train_my_model(dataset_name,transform,batch_size,net_model,learning_rate,epo
     # draw_train_accuracy_map(train_accuracy_map) # 绘制训练正确率曲线
     # draw_test_accuracy_map(test_accuracy_map) # 绘制测试正确率曲线
     draw_loss_and_accuracy_curves(train_loss_map, test_loss_map, train_accuracy_map, test_accuracy_map)
-
-
-# 单独绘图函数
-def draw_train_loss_map(train_loss_map):
-    # 绘制loss曲线
-    plt.plot(range(len(train_loss_map)), train_loss_map, color='blue', label='train loss')
-    plt.xlabel('epoch')
-    plt.ylabel('loss')
-    plt.title('Train Loss Curve')
-    plt.legend()
-    plt.show()
-
-def draw_test_loss_map(test_loss_map):
-    # 绘制loss曲线
-    plt.plot(range(len(test_loss_map)), test_loss_map, color='blue', label='test loss')
-    plt.xlabel('epoch')
-    plt.ylabel('loss')
-    plt.title('Test Loss Curve')
-    plt.legend()
-    plt.show()
-
-def draw_train_accuracy_map(train_accuracy_map):
-    # 绘制loss曲线
-    plt.plot(range(len(train_accuracy_map)), train_accuracy_map, color='blue', label='train accuracy')
-    plt.xlabel('epoch')
-    plt.ylabel('accuracy')
-    plt.title('Train Accuracy Curve')
-    plt.legend()
-    plt.show()
-
-def draw_test_accuracy_map(test_accuracy_map):
-    # 绘制loss曲线
-    plt.plot(range(len(test_accuracy_map)), test_accuracy_map, color='blue', label='test accuracy')
-    plt.xlabel('epoch')
-    plt.ylabel('accuracy')
-    plt.title('Test Accuracy Curve')
-    plt.legend()
-    plt.show()
 
 # 集合图像
 def draw_loss_and_accuracy_curves(train_loss_map, test_loss_map, train_accuracy_map, test_accuracy_map):
