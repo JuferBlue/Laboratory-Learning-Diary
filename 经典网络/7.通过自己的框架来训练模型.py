@@ -26,10 +26,10 @@ transform = torchvision.transforms.Compose([
     #     saturation=0.5, # 饱和度
     #     hue=0.5 # 色调
     # ),
-    # torchvision.transforms.Normalize(
-    #     mean=[0.4914, 0.4822, 0.4465],  # 每个通道的均值
-    #     std=[0.2023, 0.1994, 0.2010]   # 每个通道的标准差
-    # )
+    torchvision.transforms.Normalize(
+        mean=[0.4914, 0.4822, 0.4465],  # 每个通道的均值
+        std=[0.2023, 0.1994, 0.2010]   # 每个通道的标准差
+    )
 ])
 # 自定义模型
 class Residual(nn.Module):
