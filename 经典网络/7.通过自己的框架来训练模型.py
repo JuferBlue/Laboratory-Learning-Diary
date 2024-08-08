@@ -3,34 +3,25 @@ import torch
 import torchvision
 from torch import nn
 from torch.utils.data import DataLoader
-from torchvision.transforms import ToTensor
+import torchvision.transforms as transforms
 import os
 import torch.nn.functional as F
 import time
 import matplotlib.pyplot as plt
 
 # 对图片的数据进行预处理
-transform = torchvision.transforms.Compose([
-    ToTensor(),
-    torchvision.transforms.Resize(224),
-    torchvision.transforms.RandomHorizontalFlip(),
-    torchvision.transforms.RandomVerticalFlip(),
-    # torchvision.transforms.RandomResizedCrop(
-    #     size=(224,224),
-    #     scale=(0.1, 1.0),
-    #     ratio=(0.5, 2)
-    # ),
-    # torchvision.transforms.ColorJitter(
-    #     brightness=0.5, # 亮度  0.5表示在原图像的亮度上改变50%
-    #     contrast=0.5, # 对比度
-    #     saturation=0.5, # 饱和度
-    #     hue=0.5 # 色调
-    # ),
-    torchvision.transforms.Normalize(
-        mean=[0.4914, 0.4822, 0.4465],  # 每个通道的均值
-        std=[0.2023, 0.1994, 0.2010]   # 每个通道的标准差
-    )
+transform_train = torchvision.transforms.Compose([
+    transforms.RandomCrop(32,padding=4),
+    transforms.RandomHorizontalFlip(),
+    transforms.ToTensor(),
+    transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
 ])
+
+transform_test = torchvision.transforms.Compose([
+    transforms.ToTensor(),
+    transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
+])
+
 # 自定义模型
 class Residual(nn.Module):
     def __init__(self, input_channels, num_channels, use_1x1conv=False, strides=1):
@@ -75,10 +66,10 @@ class ResNet18(nn.Module):
     def __init__(self):
         super(ResNet18, self).__init__()
         self.model = nn.Sequential(
-            nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3),
+            nn.Conv2d(3, 64, kernel_size=3, stride=1, padding=1),
             nn.BatchNorm2d(64),
             nn.ReLU(),
-            nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
+            # nn.MaxPool2d(kernel_size=3, stride=2, padding=1),
             *resnet_block(64, 64, 2, first_block=True),
             *resnet_block(64, 128, 2),
             *resnet_block(128, 256, 2),
@@ -98,10 +89,10 @@ dataset_name = "CIFAR10"
 batch_size = 128
 # 学习率的大小
 # eg:learning_rate = 0.01
-learning_rate = 0.05
+learning_rate = 0.1
 # 训练的轮数
 # eg:epoch = 10
-epoch = 15
+epoch = 60
 # 模型名称
 # eg:model_name = "myNet"
 model_name = "myResNet18"
@@ -115,16 +106,16 @@ def init_weights(m):
         torch.nn.init.xavier_uniform_(m.weight)
 
 
-def train_my_model(dataset_name, transform, batch_size, net_model, learning_rate, epoch, model_name):
+def train_my_model(dataset_name, transform_train, transform_test, batch_size, net_model, learning_rate, epoch, model_name):
     # 指定训练设备
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     # 动态获取数据集类
     dataset_class = getattr(torchvision.datasets, dataset_name)
     # 训练集
-    train_data = dataset_class(root='../数据集/{}'.format(dataset_name.lower()), train=True, transform=transform,
+    train_data = dataset_class(root='../数据集/{}'.format(dataset_name.lower()), train=True, transform=transform_train,
                                download=True)
     # 测试集
-    test_data = dataset_class(root='../数据集/{}'.format(dataset_name.lower()), train=False, transform=transform,
+    test_data = dataset_class(root='../数据集/{}'.format(dataset_name.lower()), train=False, transform=transform_test,
                               download=True)
 
     # 保存数据集的长度
@@ -151,7 +142,10 @@ def train_my_model(dataset_name, transform, batch_size, net_model, learning_rate
 
     # 优化器
     learn_rate = learning_rate
-    optimizer = torch.optim.SGD(net.parameters(), lr=learn_rate)
+    optimizer = torch.optim.SGD(net.parameters(), lr=learn_rate,momentum=0.9, weight_decay=5e-4)
+    # 学习率调整器
+    # 每30轮学习率变为原来的0.1
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=15, gamma=0.1)
 
     # 设置训练网络的一些记录数
     # 记录已训练的总次数
@@ -272,6 +266,9 @@ def train_my_model(dataset_name, transform, batch_size, net_model, learning_rate
         torch.save(net.state_dict(), "./模型保存/" + "{}/".format(model_name) + "net{}.pth".format(i))
         print("模型保存成功")
 
+        #更新学习率
+        scheduler.step()
+
     # 绘图
     # draw_train_loss_map(train_loss_map) # 绘制训练loss曲线
     # draw_test_loss_map(test_loss_map) # 绘制测试loss曲线
@@ -303,4 +300,4 @@ def draw_loss_and_accuracy_curves(train_loss_map, test_loss_map, train_accuracy_
 
 
 # 训练模型
-train_my_model(dataset_name, transform, batch_size, net_model, learning_rate, epoch, model_name)
+train_my_model(dataset_name, transform_train,transform_test, batch_size, net_model, learning_rate, epoch, model_name)
