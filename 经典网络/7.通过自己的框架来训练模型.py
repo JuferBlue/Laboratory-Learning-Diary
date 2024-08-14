@@ -133,7 +133,6 @@ def train_my_model(dataset_name, transform_train, transform_test, batch_size, ne
     net.to(device)
 
     # 初始化模型参数
-
     net.apply(init_weights)
 
     # 损失函数
