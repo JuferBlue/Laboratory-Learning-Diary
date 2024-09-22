@@ -39,7 +39,7 @@ class LeavesData(Dataset):
     def __init__(self, csv_path, file_path, mode='train', valid_ratio=0.2, resize_height=256, resize_width=256):
         """
         Args:
-            csv_path (string): csv 文件路径
+            csv_path (string): 训练标签csv 文件路径
             file_path (string): 图像文件所在路径
             mode (string): 训练模式还是测试模式
             valid_ratio (float): 验证集比例
@@ -54,15 +54,14 @@ class LeavesData(Dataset):
 
         # 读取 csv 文件
         # 利用pandas读取csv文件
-        self.data_info = pd.read_csv(csv_path, header=None)  # header=None是去掉表头部分
+        self.data_info = pd.read_csv(csv_path, header=None)  # 数据从行从1开始计数
         # 计算 length
         self.data_len = len(self.data_info.index) - 1
         self.train_len = int(self.data_len * (1 - valid_ratio))  # 训练集的前百分之八十用来训练
 
         if mode == 'train':
             # 第一列包含图像文件的名称
-            self.train_image = np.asarray(
-                self.data_info.iloc[1:self.train_len, 0])  # self.data_info.iloc[1:,0]表示读取第一列，从第二行开始到train_len
+            self.train_image = np.asarray(self.data_info.iloc[1:self.train_len, 0])  # self.data_info.iloc[1:,0]表示读取第一列，从第二行开始到train_len
             # 第二列是图像的 label
             self.train_label = np.asarray(self.data_info.iloc[1:self.train_len, 1])
             self.image_arr = self.train_image
