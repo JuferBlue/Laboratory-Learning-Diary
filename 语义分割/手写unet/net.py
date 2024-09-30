@@ -65,8 +65,8 @@ class UNet(nn.Module):
         self.c8 = Conv_Block(256,128)
         self.u4 = UpSample(128)
         self.c9 = Conv_Block(128,64)
-        self.out = nn.Conv2d(64,3,3,1,1)
-        self.Th = nn.Sigmoid()
+        self.out = nn.Conv2d(64,21,3,1,1)
+
 
     def forward(self, x):
         R1 = self.c1(x)
@@ -78,7 +78,7 @@ class UNet(nn.Module):
         R7 = self.c7(self.u2(R6,R3))
         R8 = self.c8(self.u3(R7,R2))
         R9 = self.c9(self.u4(R8,R1))
-        return self.Th(self.out(R9))
+        return self.out(R9)
 
 
 if __name__ == '__main__':

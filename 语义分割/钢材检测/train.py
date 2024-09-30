@@ -1,6 +1,6 @@
 """
 @author:JuferBlue
-@file:train.py
+@file:Train.py
 @date:2024/9/21 17:16
 @description:
 """

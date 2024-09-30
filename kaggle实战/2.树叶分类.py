@@ -88,7 +88,7 @@ class LeavesData(Dataset):
         img_as_img = Image.open(self.file_path + single_image_name)
 
         # 如果需要将RGB三通道的图片转换成灰度图片可参考下面两行
-        #         if img_as_img.mode != 'L':
+        #         if img_as_img.model != 'L':
         #             img_as_img = img_as_img.convert('L')
 
         # 设置好需要转换的变量，还可以包括一系列的nomarlize等等操作
